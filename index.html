@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A/B Testing & Diagnostics Framework</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #eef2ff;
+        }
+        .decision-card {
+            transition: all 0.3s ease-in-out;
+        }
+        select:disabled {
+            background-color: #e5e7eb;
+            cursor: not-allowed;
+        }
+        .btn-primary {
+            background-image: linear-gradient(to right, #4f46e5, #7c3aed);
+        }
+        .btn-secondary {
+            background-image: linear-gradient(to right, #4b5563, #1f2937);
+        }
+        .home-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .home-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- Home Screen -->
+    <div id="homeScreen" class="container mx-auto p-4 sm:p-6 lg:p-8">
+         <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight">Experimentation Framework</h1>
+            <p class="text-lg text-gray-600 mt-3 max-w-2xl mx-auto">Choose a framework to get started.</p>
+        </header>
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- A/B Testing Design Card -->
+            <div id="goToAbTesting" class="home-card cursor-pointer bg-white p-8 rounded-2xl shadow-lg text-center">
+                <div class="inline-block bg-indigo-100 p-4 rounded-full mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900">A/B Testing Design</h2>
+                <p class="text-gray-600 mt-2">Design a new experiment from first principles.</p>
+            </div>
+            <!-- Metric Diagnostics Card -->
+            <div id="goToDiagnostics" class="home-card cursor-pointer bg-white p-8 rounded-2xl shadow-lg text-center">
+                 <div class="inline-block bg-indigo-100 p-4 rounded-full mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900">Metric Diagnostics</h2>
+                <p class="text-gray-600 mt-2">Diagnose unexpected metric changes.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- A/B Testing Screen -->
+    <div id="abTestingScreen" class="hidden">
+        <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+            <button id="homeBtnAb" class="absolute top-6 right-6 btn-secondary text-white font-bold py-2 px-4 rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all transform hover:scale-105">Home</button>
+            <header class="text-center mb-12">
+                <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight">A/B Testing Framework</h1>
+                <p class="text-lg text-gray-600 mt-3 max-w-2xl mx-auto">Build your experiment from first principles to solve any product case study.</p>
+            </header>
+            <div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 p-6 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg">
+                <div>
+                    <label for="productSelector" class="block text-sm font-medium text-gray-700 mb-2">1. Select Product</label>
+                    <select id="productSelector" class="w-full p-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        <option value="">-- Choose a product --</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="surfaceSelector" class="block text-sm font-medium text-gray-700 mb-2">2. Select Product Surface</label>
+                    <select id="surfaceSelector" class="w-full p-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" disabled>
+                        <option value="">-- Choose a surface --</option>
+                    </select>
+                </div>
+            </div>
+            <div id="cheatsheet-form" class="space-y-6 max-w-4xl mx-auto hidden">
+                <div id="framework-sections" class="space-y-6"></div>
+                <div class="text-center pt-6 flex justify-center items-center space-x-4">
+                    <button id="generateDecisionBtn" class="btn-primary text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105">
+                        Analyze & Decide
+                    </button>
+                    <button id="iterateBtn" class="btn-secondary text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all transform hover:scale-105">
+                        Suggest Next Steps
+                    </button>
+                </div>
+            </div>
+            <div id="decision-output" class="max-w-4xl mx-auto mt-12 hidden">
+                 <h2 class="text-2xl font-bold text-center mb-4 text-gray-800">Decision Analysis</h2>
+                <div id="decision-card" class="decision-card bg-white p-8 rounded-2xl shadow-lg border-t-4">
+                    <p id="decision-commentary" class="text-gray-700 leading-relaxed text-lg"></p>
+                </div>
+            </div>
+            <div id="iteration-output" class="max-w-4xl mx-auto mt-12 hidden">
+                 <h2 class="text-2xl font-bold text-center mb-4 text-gray-800">Iteration & Debugging Strategies</h2>
+                <div id="iteration-card" class="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-yellow-500">
+                    <ul id="iteration-list" class="list-disc list-inside space-y-3 text-gray-700 text-lg"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metric Diagnostics Screen -->
+    <div id="diagnosticsScreen" class="hidden">
+         <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+             <button id="homeBtnDiagnostics" class="absolute top-6 right-6 btn-secondary text-white font-bold py-2 px-4 rounded-full shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all transform hover:scale-105">Home</button>
+             <header class="text-center mb-12">
+                <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 tracking-tight">Metric Diagnostics Framework</h1>
+                <p class="text-lg text-gray-600 mt-3 max-w-2xl mx-auto">Diagnose metric changes by understanding common patterns and investigative steps.</p>
+            </header>
+            <div class="max-w-2xl mx-auto mb-8">
+                <label for="diagProductSelector" class="block text-sm font-medium text-gray-700 mb-2">Select Diagnostic Example:</label>
+                <select id="diagProductSelector" class="w-full p-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    <option value="normal">Normal Example</option>
+                    <option value="ads">Ads Example</option>
+                    <option value="fb_groups">Facebook Groups Example</option>
+                    <option value="fb_marketplace">Facebook Marketplace Example</option>
+                    <option value="whatsapp_groups">WhatsApp Groups Example</option>
+                </select>
+            </div>
+            <div id="diagnostics-content" class="max-w-6xl mx-auto">
+                <!-- Dynamic content will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- PDF Modal -->
+    <div id="pdfModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+        <div class="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+            <div class="mt-3 text-center">
+                <div class="flex justify-between items-center pb-3">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Instagram Metrics Cheatsheet</h3>
+                    <button id="closeModalBtn" class="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+                <div class="mt-2 px-7 py-3 max-h-96 overflow-y-auto text-left">
+                    <div id="pdfContent" class="overflow-x-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // Data and variables remain largely the same, with additions for the new screen
+        const genericGoals = ["Increase user engagement", "Improve user retention", "Drive conversion", "Enhance user satisfaction", "Grow user base"];
+        const genericHypotheses = ["A new feature will increase user engagement", "Improving the UI will lead to higher retention", "A simplified flow will drive more conversions", "Personalization will enhance user satisfaction", "A viral loop will grow the user base"];
+        
+        const productData = {
+             instagram: {
+                name: "Instagram",
+                surfaces: {
+                    search: {
+                        name: "Search",
+                        goal: [...genericGoals, "Search efficiency, time-to-content"],
+                        hypothesis: [...genericHypotheses, "Surfacing recent profiles in suggestions improves search efficiency without harming exploration."],
+                        primary_metric: ["Search success rate (tap-to-target with intent)", "Time-to-target profile"],
+                        guardrails: {
+                             core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Search success rate"],
+                            engagement: ["Accidental tap rate (<2s dwell)", "Search diversity (unique profiles visited, entropy)"],
+                            performance: ["Suggestion render latency", "Input latency"]
+                        },
+                        unit_eligibility: ["User-level", "Session-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By pre-period engagement, geo, device type", "Analysis: CUPED on pre-period engagement metrics"],
+                        hte: ["Returning vs. Cold Users", "Heavy vs. Light Searchers", "Geo/Device Segments", "Query Type (people vs. non-people)", "Locale/Keyboard (latin vs. non-latin)"],
+                        pitfalls: ["Over-personalization -> Diversity guardrail & cap recents", "Stale suggestions -> Add TTL", "Accidental taps -> Check tap targets", "Privacy/awkward recents -> 'Remove' option", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    stories: {
+                        name: "Stories",
+                        goal: [...genericGoals, "Habit formation, daily active use"],
+                        hypothesis: [...genericHypotheses, "Higher visual salience of the ring will lead to more opens", "A new interactive sticker will increase engagement"],
+                        primary_metric: ["Stories opens per DAU", "Time spent in Stories", "Interaction rate (taps, replies)"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Stories opens per DAU"],
+                            cannibalization: ["Feed time per user", "Reels time per user", "DM time per user"],
+                            user_experience: ["Mis-tap rate on Stories ring", "App performance/load time", "Mute/skip rate"]
+                        },
+                        unit_eligibility: ["User-level", "Session-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By pre-period engagement, geo, device type", "Analysis: CUPED on pre-period engagement metrics"],
+                        hte: ["New vs. Existing Users", "High vs. Low Activity Users", "Geo/Device Segments"],
+                        pitfalls: ["Short-lived novelty -> Monitor week-2 lift", "Cannibalization -> Check cross-surface time", "Lower quality creation -> Monitor quality guardrails", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    reels_tab: {
+                        name: "Reels Tab",
+                        goal: [...genericGoals, "Short-form engagement, entertainment value"],
+                        hypothesis: [...genericHypotheses, "A new ranking model will increase watch time", "Improving the audio picker will lead to more creations"],
+                        primary_metric: ["Reels watch time per DAU", "Reels starts"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Reels watch time per DAU"],
+                            equity: ["Creator reach Gini"],
+                            integrity: ["Reels hide/report rate"]
+                        },
+                        unit_eligibility: ["User-level", "Session-level", "Geo-level clusters", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: Geo-level cluster", "Stratification: By pre-period engagement, geo, device type", "Analysis: CUPED on pre-period engagement metrics"],
+                        hte: ["New vs. Existing Users", "High vs. Low Activity Users", "Geo/Device Segments"],
+                        pitfalls: ["Cannibalization -> Monitor cross-surface time", "Filter bubble -> Monitor content diversity", "Measurement skew -> Trim/winsorize", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    posts_hide_likes: {
+                        name: "Posts",
+                        goal: [...genericGoals, "Increase creator activation among new users", "Increase posts/user in first week"],
+                        hypothesis: [...genericHypotheses, "Hiding like counts by default reduces social comparison, so more new users feel safe to post"],
+                        primary_metric: ["Creator activation rate (users with >=1 post by D7)", "Posts per new user (D0-D7)"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Posts per new user"],
+                            integrity: ["Reports/hides per 1k impressions not worse"],
+                            quality: ["Median reactions/comments per post not collapsing"]
+                        },
+                        unit_eligibility: ["User-level (new user cohort)", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level (new user cohort)", "Stratification: By acquisition channel, geo, device type", "Analysis: CUPED on pre-period engagement metrics"],
+                        hte: ["New vs. Existing Users", "Geo/Device Segments", "Acquisition Channel (paid vs. organic)"],
+                        pitfalls: ["Low quality posts -> Watch quality guardrails", "Creator mismatch -> Add education tooltip", "Acquisition bias -> Stratify by channel", "Post-treatment bias -> Avoid D0 CUPED", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    creator_product_tagging: {
+                        name: "Creators",
+                        goal: [...genericGoals, "Increase product discovery via creator posts", "Make product tagging easier and more accurate for creators"],
+                        hypothesis: [...genericHypotheses, "Auto-suggesting products in the composer will increase tag adoption", "More tagged posts will drive more product clicks from viewers"],
+                        primary_metric: ["Tag adoption rate (% of posts with >=1 product tag)", "Product clicks per 1k impressions (PPK) on tagged posts"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Tag adoption rate"],
+                            creator_experience: ["Time-to-publish (non-inferiority)", "Suggestion acceptance rate (diagnostic)"],
+                            integrity: ["Spam/negative feedback reports per 1k imps", "Policy violations per 1k tagged posts"],
+                            monetization: ["Ads RPM (neutral)"]
+                        },
+                        unit_eligibility: ["Creator-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: Creator-level", "Stratification: By creator size, vertical, geo", "Analysis: CUPED on pre-period tagging behavior"],
+                        hte: ["Geo/Device Segments", "Creator Size (small vs. large)", "Creator Vertical (e.g., fashion, beauty)"],
+                        pitfalls: ["Slower creation -> Monitor time-to-publish", "Spammy tags -> Monitor integrity guardrails", "Contamination -> Randomize at creator-level", "Prolific creators dominate -> HTE by creator size", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    dm_read_receipts: {
+                        name: "DM",
+                        goal: [...genericGoals, "Conversation depth, reply timeliness"],
+                        hypothesis: [...genericHypotheses, "A prominent read-receipt toggle reduces confusion, leading to more messages sent per day without harming retention."],
+                        primary_metric: ["Messages sent per user-day", "Reply-within-24h rate", "Conversation starts per DAU"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Messages sent per user-day"],
+                            health: ["Time-to-reply (RMST)", "Blocks/reports per 1k conversations"],
+                            performance: ["Message send success rate", "Delivery latency"]
+                        },
+                        unit_eligibility: ["User-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By pre-period DM activity, geo, device type", "Analysis: CUPED on pre-period DM volume"],
+                        hte: ["New vs. Existing Users", "High vs. Low Activity Users", "Geo/Device Segments", "1:1 vs. Group Threads"],
+                        pitfalls: ["Denominator shifts -> Keep user-day primary", "Heavy-tailed senders -> Trim or use NegBin", "Dyadic spillovers -> Run contacts-of-treated diagnostic", "Cultural heterogeneity -> Pre-specify locale slices", "Toggling bias -> Analyze via ITT", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    profile_page: {
+                        name: "Profile Page",
+                        goal: [...genericGoals, "Creator connection, follow conversion"],
+                        hypothesis: [...genericHypotheses, "A new profile layout will increase follow rates"],
+                        primary_metric: ["Follow rate from profile", "Profile visits per DAU"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Follow rate from profile"],
+                            engagement: ["Bounce rate"]
+                        },
+                        unit_eligibility: ["User-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By pre-period engagement, geo, device type", "Analysis: CUPED on pre-period profile visits"],
+                        hte: ["New vs. Existing Users", "High vs. Low Activity Users", "Geo/Device Segments"],
+                        pitfalls: ["Lowering engagement on other parts of the profile -> Track clicks on all links", "Novelty effect -> Monitor week-2 lift", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    shopping_pdp: {
+                        name: "Shopping",
+                        goal: [...genericGoals, "Purchase conversion"],
+                        hypothesis: [...genericHypotheses, "Adding user reviews will increase add-to-cart rate"],
+                        primary_metric: ["Product view-to-purchase conversion", "Add-to-cart rate"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Add-to-cart rate"],
+                            experience: ["Bounce rate", "Product return rate"]
+                        },
+                        unit_eligibility: ["User-level", "Session-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By pre-period purchase history, geo, device type", "Analysis: CUPED on pre-period add-to-cart rate"],
+                        hte: ["New vs. Existing Shoppers", "High vs. Low Intent Users", "Geo/Device Segments"],
+                        pitfalls: ["Negative reviews hurting conversion -> Monitor overall effect", "Choice overload -> Simplify UI", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    }
+                }
+            },
+            facebook: {
+                name: "Facebook",
+                surfaces: {
+                    feed: {
+                        name: "Feed",
+                        goal: [...genericGoals, "User satisfaction, engagement depth"],
+                        hypothesis: [...genericHypotheses, "A nudge will prompt more users to leave meaningful comments", "Ranking change will prioritize posts from friends"],
+                        primary_metric: ["Comments per post view", "Count of long comments (>15 chars)", "Reshares per post"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Feed session time"],
+                            cannibalization: ["Stories time per user", "Groups time per user"],
+                            user_experience: ["Negative feedback rate (hide/report)", "Dwell time per post", "Scroll friction"]
+                        },
+                        unit_eligibility: ["User-level", "Session-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By pre-period engagement, geo, device type", "Analysis: CUPED on pre-period engagement metrics"],
+                        hte: ["New vs. Existing Users", "High vs. Low Activity Users", "Geo/Device Segments"],
+                        pitfalls: ["Echo chambers -> Monitor topic diversity", "Negative sentiment -> Track comment sentiment", "Clickbait -> Monitor dwell vs. CTR", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    groups: {
+                        name: "Groups",
+                        goal: [...genericGoals, "Increase group engagement", "Foster community health"],
+                        hypothesis: [...genericHypotheses, "New admin tools will reduce moderator burden", "A 'Welcome Post' feature will improve new member retention"],
+                        primary_metric: ["Group posts per member", "Comments per post", "New member retention rate"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Group posts per member"],
+                            cannibalization: ["Feed time per user"],
+                            user_experience: ["Rate of content reported for misinformation", "Admin actions per day", "Group churn rate"]
+                        },
+                        unit_eligibility: ["User-level", "Group-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: Group-level", "Stratification: By group size, activity, geo", "Analysis: CUPED on pre-period group activity"],
+                        hte: ["New vs. Existing Users", "High vs. Low Activity Users", "Geo/Device Segments", "Group Size"],
+                        pitfalls: ["Moderator burnout -> Survey moderators", "Misinformation -> Monitor report rates", "In-group/out-group dynamics -> Analyze new/old member interactions", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    marketplace: {
+                        name: "Marketplace",
+                        goal: [...genericGoals, "Increase transaction volume", "Improve buyer/seller trust"],
+                        hypothesis: [...genericHypotheses, "A new seller rating system will increase buyer confidence and purchases"],
+                        primary_metric: ["Transactions per user", "Listing views to message rate"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Marketplace session time"],
+                            trust_and_safety: ["Scam report rate", "Buyer/seller dispute rate"],
+                            user_experience: ["Time to sell", "Search-to-message latency"]
+                        },
+                        unit_eligibility: ["User-level", "Listing-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By buyer/seller status, geo, category", "Analysis: CUPED on pre-period transaction volume"],
+                        hte: ["New vs. Existing Buyers/Sellers", "High vs. Low Value Items", "Geo/Device Segments"],
+                        pitfalls: ["Rating inflation/deflation -> Monitor rating distribution", "Fraudulent activity -> Monitor trust & safety metrics", "Reduced liquidity -> Track number of listings", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    }
+                }
+            },
+            whatsapp: {
+                name: "WhatsApp",
+                surfaces: {
+                    communities: {
+                        name: "Communities",
+                        goal: [...genericGoals, "Increase engagement in large groups", "Improve admin tools"],
+                        hypothesis: [...genericHypotheses, "A new 'announcements' feature will increase message read rates"],
+                        primary_metric: ["Messages sent per community member", "Admin actions per week"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Community open rate"],
+                            health: ["Mute rate", "Leave rate", "Report rate"]
+                        },
+                        unit_eligibility: ["Community-level", "User-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: Community-level", "Stratification: By community size, geo", "Analysis: CUPED on pre-period message volume"],
+                        hte: ["New vs. Existing Communities", "Large vs. Small Communities", "Geo/Device Segments"],
+                        pitfalls: ["Admin burnout -> Survey admins", "Information overload -> Monitor mute/leave rates", "Spam -> Monitor report rates", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                    video_calls: {
+                        name: "Video Calls",
+                        goal: [...genericGoals, "Improve call quality and reliability", "Increase call duration"],
+                        hypothesis: [...genericHypotheses, "A new video codec will improve call quality and increase call duration"],
+                        primary_metric: ["Average call duration", "Call failure rate"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Calls per user"],
+                            quality: ["Video bitrate", "Frames per second (FPS)", "Audio quality score (MOS)"],
+                            performance: ["CPU/Battery usage"]
+                        },
+                        unit_eligibility: ["User-level", "Call-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By network type, device, geo", "Analysis: CUPED on pre-period call duration"],
+                        hte: ["Low-end vs. High-end Devices", "Poor vs. Good Network Conditions", "Geo/Device Segments"],
+                        pitfalls: ["Increased battery drain -> Monitor performance guardrails", "Reduced compatibility -> Track call failure rates by device", "Latency issues -> Monitor call setup time", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    },
+                     status: {
+                        name: "Status",
+                        goal: [...genericGoals, "Increase status creation and viewing"],
+                        hypothesis: [...genericHypotheses, "Adding new creative tools (stickers, fonts) will increase status posts"],
+                        primary_metric: ["Status posts per user", "Status views per user"],
+                        guardrails: {
+                            core_engagement: ["Retention NI = Non-inferiority test on retention (e.g., not worse by > 0.1pp).", "Session length NI = Non-inferiority test on total time spent.", "Reports = Keep report rates stable or ↓.", "Status viewers per post"],
+                            health: ["Mute rate", "Block rate"],
+                            performance: ["Media upload time"]
+                        },
+                        unit_eligibility: ["User-level", "Filter out trims (inactive users)", "Eligible users (active > 3 days/week, geo etc)"],
+                        design: ["Randomization unit: User-level", "Stratification: By pre-period status activity, geo, device", "Analysis: CUPED on pre-period post frequency"],
+                        hte: ["New vs. Existing Users", "High vs. Low Status Posters", "Geo/Device Segments"],
+                        pitfalls: ["Low-quality content -> Monitor mute/block rates", "Cannibalization from chat -> Monitor messages sent", "Performance issues -> Track media upload success/latency", "No significant effect -> Create a geo holdout to monitor long-term drift"]
+                    }
+                }
+            },
+            global: {
+                 power_analysis: [
+                    "Power: 80%",
+                    "Significance Level (Alpha): 5%",
+                    "Practical Significance (MDE): 5%",
+                    "Duration: 2-3 weeks (covers business/seasonal/weekend cycles)",
+                    "Sample Size: Calculated per arm based on MDE"
+                ],
+                metric_analysis: [
+                    "z-test for proportions (e.g., activation rate)",
+                    "t-test for counts (e.g., posts/user)",
+                    "One-sided NI-test for retention guardrails",
+                    "CUPED using pre-period data for variance reduction",
+                    "Cluster-robust SEs at the user/creator level",
+                    "Calculate effective N using design effect for correlated units",
+                    "Use mean-of-ratios or ratio-of-means estimators"
+                ],
+                diagnostics: {
+                    main: ["A/A test validation", "SRM (chi-square test; p-value < 0.01 indicates error)", "SMD < 0.1 for good covariate balance"],
+                    robustness: ["Sensitivity analysis", "Testing alternative hypothesis", "Ablation test (to understand drivers of change)", "Causal forests, uplift (to understand change in subgroups)"]
+                }
+            }
+        };
+
+        const iterationSteps = [
+            "Check statistical power (the experiment may be underpowered, especially with few clusters).",
+            "Apply variance reduction techniques like CUPED, or extend the experiment duration to collect more data.",
+            "Report both delta method and cluster bootstrap CIs; if bootstrap CIs also cross zero, the result is likely truly null.",
+            "If the goal is to not make things worse (a non-inferiority goal), re-frame the test with an NI margin instead of a superiority test."
+        ];
+
+        const pdfData = {
+            "Content Consumption": [
+                { "Surface": "Feed (Home)", "Primary Metrics": "Feed session time, Feed post impressions per DAU", "Common Guardrails": "Ads RPM, creator reach Gini" },
+                { "Surface": "Feed - Suggested Posts", "Primary Metrics": "CTR, Time spent on suggested posts", "Common Guardrails": "Follow/unfollow rate, hide/report rate" },
+                { "Surface": "Stories", "Primary Metrics": "Stories opens per DAU, Avg. stories viewed per session", "Common Guardrails": "Story completion rate, story hide/mute rate" },
+                { "Surface": "Reels Tab", "Primary Metrics": "Reels watch time per DAU, Reels starts", "Common Guardrails": "Creator reach Gini, Reels hide/report rate" },
+                { "Surface": "Reels in Explore", "Primary Metrics": "Reels starts, Reels CTR", "Common Guardrails": "Watch time per start, accidental taps" },
+                { "Surface": "Profile Page", "Primary Metrics": "Profile visits per DAU, Follow rate from profile", "Common Guardrails": "Bounce rate, report rate" }
+            ],
+            "Content Discovery": [
+                { "Surface": "Explore Grid", "Primary Metrics": "Tap-through rate to content, Avg. content viewed per explore session", "Common Guardrails": "Diversity (entropy), content hide/report rate" },
+                { "Surface": "Search - Autocomplete", "Primary Metrics": "Search success rate, Time-to-target", "Common Guardrails": "Search diversity entropy, accidental taps" },
+                { "Surface": "Search Results Page", "Primary Metrics": "Search CTR, Time-to-target", "Common Guardrails": "Diversity entropy, accidental taps" },
+                { "Surface": "Suggested Follows (Feed Inline)", "Primary Metrics": "Follow conversion rate, Tap-through rate", "Common Guardrails": "Unfollow rate, hide suggestion rate" }
+            ],
+            "Commerce": [
+                { "Surface": "Shopping - Product Detail Page", "Primary Metrics": "Product view-to-purchase conversion, Add-to-cart rate", "Common Guardrails": "Bounce rate, product return rate" },
+                { "Surface": "Shopping - Shops Tab", "Primary Metrics": "Product CTR, Session length", "Common Guardrails": "Ads RPM, bounce rate" }
+            ],
+            "Direct Interactions": [
+                { "Surface": "Direct Messages - Inbox", "Primary Metrics": "DM open rate, Reply rate", "Common Guardrails": "Block rate, report rate" },
+                { "Surface": "Direct Messages - Thread", "Primary Metrics": "Reply rate within 24h, Messages sent per DAU", "Common Guardrails": "Block rate, report rate" }
+            ],
+            "Notifications": [
+                { "Surface": "Notifications - Push", "Primary Metrics": "Push open rate, Re-engagement rate", "Common Guardrails": "Unsubscribe rate, opt-out rate" },
+                { "Surface": "Notifications - In-App Activity Tab", "Primary Metrics": "Tap-through rate, Session reactivation rate", "Common Guardrails": "Hide/mute rate, bounce rate" }
+            ]
+        };
+        
+        const diagnosticsData = {
+            normal: {
+                title: "Normal Example Diagnostics",
+                steps: {
+                    "Clarify the Change": ["Metric Definition: Be precise (per user, per session, or total count).", "Change: Quantify relative & absolute change.", "When: Pinpoint the exact start (e.g., after Android rollout).", "If A/B test: check SRM, covariate balance, targeting logic, and logging consistency."],
+                    "Segment the Data": ["Who: New vs. existing users, high- vs. low-engagement, creators vs. consumers.", "Where: Country, language.", "What: Content type, Device, app version, network quality.", "Funnel metrics: open, send, replies.", "Holdout: check the drop against the holdout if internal change happened."],
+                    "Generate Hypotheses": ["Internal: Feature change, algorithm tweak, instrumentation logging.", "External: Seasonality, competitor actions.", "Hypothesis must be falsifiable and linked to metric change.", "Feature Engagement Substitution, Content Length Shift, Supply shift, Spam change or policy changes, Reduced visibility in UI, Logging/Measurement Issue, External Attention Shift, Interaction effects."],
+                    "Check Counter Metrics": ["User Experience: negative feedback, total DAU retention.", "Ecosystem: Cannibalization from other surfaces, retention drops.", "Creator: diversity metrics.", "Performance: latency, app crash, usage."],
+                    "Causal Analysis": ["Launch Attribution: Time-series, Experiment/holdout, CUPED/ANCOVA, DiD.", "Core Analysis: Bootstrap CI, Segment-level HTEs, Causal Forest/Uplift, Decompose metric drop."],
+                    "Propose Next Steps": ["If impact negative, rollback or iterate.", "If unclear causality, run a controlled experiment.", "If clear causality, propose a targeted change and rollout to certain segments.", "Change the success metric to include new finding.", "Accept the tradeoff if findings is > primary metric.", "Targeted education for certain segments.", "Mitigation features - notification to continue."]
+                }
+            },
+            ads: {
+                title: "Ads Example Diagnostics",
+                steps: {
+                    "Clarify the Change": ["Metric Definition: CTR, ROI/ROAS, CVR.", "Change: Quantify absolute & relative changes for CTR, ROI, CVR, CPC.", "When: targeting change, or auction rule update.", "If experiment: Check SRM, targeting logic, conversion attribution consistency, logging."],
+                    "Segment the Data": ["Who: New vs. returning users, high vs. low intent audiences.", "Where: Geo, device, platform (FB vs IG).", "What: Ad objective, creative type, placement.", "Funnel: Impression → click (CTR), click → conversion (CVR), conversion value (AOV)."],
+                    "Generate Hypotheses": ["High CTR from low-intent users (quality drop).", "Creative novelty decay.", "Internal: Targeting expansion, Ranking model tweak, Auction rule/price floor change, Measurement lag.", "External: Seasonal advertiser mix change, Competitor ad campaigns."],
+                    "Check Counter Metrics": ["Advertiser Health: Revenue, advertiser churn, ad spend trends.", "User Experience: Ad hides/reports, negative feedback.", "Auction Health: CPM, CPC shifts, win rates."],
+                    "Causal Analysis": ["Launch Attribution: Time-series, Experiment/holdout, CUPED/ANCOVA, DiD.", "Core Analysis: Bootstrap CI, Segment-level HTEs, Causal Forest/Uplift, Decompose ROI drop."],
+                    "Propose Next Steps": ["CTR↑ but ROI↓ → Tighten targeting, reweight auction toward conversion objectives.", "CTR↓ & ROI↓ → Check creative/placement mix, diagnose distribution bugs, assess external competition.", "ROI stable but CTR↓ → Shift success metric (e.g., value-based optimization).", "Segment rollback → Retune targeting/auction for impacted segments."]
+                }
+            },
+            fb_groups: {
+                title: "Facebook Groups Diagnostics",
+                steps: {
+                    "Clarify the Change": ["Metric Definition: Total engagement (posts + comments + reactions).", "Change: Quantify absolute & relative drop.", "When: Pinpoint start (e.g., feed algo change, notification tweak).", "If experiment: check SRM, targeting logic, logging consistency."],
+                    "Segment the Data": ["Who: New vs existing members, posters vs consumers.", "Where: Geo, device, platform.", "What: Group type (public/private, size), device, app version.", "Holdout: Compare impacted vs. non-impacted groups if internal change."],
+                    "Generate Hypotheses": ["Internal: Feed distribution change, notification settings, feature cannibalization (e.g., Community Chats).", "External: Competitor migration (Discord, Reddit), seasonal interest drop.", "Policy: Spam cleanup, privacy enforcement."],
+                    "Check Counter Metrics": ["User Experience: Spam reports, group join/leave rates.", "Ecosystem: Overall FB time, Pages/DM engagement (cannibalization check).", "Performance: Feed impressions for group posts, post creation rates."],
+                    "Causal Analysis": ["Launch Attribution: Time-series, Experiment/holdout.", "Core Analysis: CUPED/ANCOVA, DiD, Segment-level HTEs, Causal Forest/Uplift."],
+                    "Propose Next Steps": ["Algo change → retune feed distribution.", "Content drop → re-engage creators.", "Policy impact → ease restrictions or communicate benefits.", "Cannibalization → integrate cross-promotion.", "External loss → differentiate features, re-market."]
+                }
+            },
+            fb_marketplace: {
+                title: "Facebook Marketplace Diagnostics",
+                steps: {
+                    "Clarify the Change": ["Define exactly what dropped (DAU, listings, messages, transactions).", "Quantify absolute & relative change.", "Pinpoint timing vs known events (UI redesign, policy change)."],
+                    "Segment the Data": ["Who: Buyers vs sellers, new vs returning, heavy vs casual users.", "Where: Regions.", "What: Category of items (cars, electronics).", "Funnel: View → message, message → transaction rates."],
+                    "Generate Hypotheses": ["Internal: UI redesign friction, fee introduction, search/recommendation changes, policy moderation shifts.", "External: Seasonal slowdown, economic downturn, competitor campaigns, trust/safety incidents.", "Supply shift: Seller churn reducing inventory.", "Demand shift: Buyer migration to competitors."],
+                    "Check Counter Metrics": ["Total Facebook commerce engagement (Shops) → cannibalization check.", "Overall FB DAU/time spent → isolate Marketplace-specific drop.", "Spam/fraud reports, listing rejection rates.", "Support tickets related to Marketplace usability."],
+                    "Causal Analysis": ["Launch Attribution: Time-series (control for seasonality), Experiment/holdout.", "Core Analysis: Funnel drop-off analysis, Competitor trend analysis, CUPED/ANCOVA, DiD."],
+                    "Propose Next Steps": ["UI issue → Iterate design, restore key flows.", "Supply drop / policy change → Re-engage sellers with promos, fee waivers.", "Trust/safety → Add buyer protection, verified seller badges.", "Competition → Market differentiation, feature parity.", "Cannibalization → Integrate cross-promotion from Shops/Groups."]
+                }
+            },
+            whatsapp_groups: {
+                title: "WhatsApp Groups Diagnostics",
+                steps: {
+                    "Clarify the Change": ["Metric Definition: DAU, 30-day retention, messages/user, call minutes.", "Change: Quantify % drop and absolute change.", "When: Identify if aligns with feature (Communities), policy update, anti-spam rollout."],
+                    "Segment the Data": ["Who: New vs existing members, power vs casual.", "Where: Geo (privacy-sensitive markets), language.", "What: Surface type (msg, call, group), device, app version."],
+                    "Generate Hypotheses": ["Internal: Communities launch changed group usage, call improvements cannibalized text, anti-spam removed active accounts.", "External: Policy backlash, competitor migration (Signal, Telegram), regional outages/events."],
+                    "Check Counter Metrics": ["User Experience: Spam reports, app store reviews.", "Ecosystem: Combined engagement (msg+call), group activity.", "Market Signals: Competitor app rankings/downloads, uninstall rates."],
+                    "Causal Analysis": ["Launch Attribution: Time-series, Experiment/holdout.", "Core Analysis: CUPED/ANCOVA, DiD, Correlate drop with competitor adoption or news event timing."],
+                    "Propose Next Steps": ["Feature impact → UX education, tweak design.", "Policy backlash → comms campaign, delay/change rollout.", "External loss → feature parity, targeted re-acquisition.", "Acceptable substitution→ update success metric."]
+                }
+            }
+        };
+
+        const homeScreen = document.getElementById('homeScreen');
+        const abTestingScreen = document.getElementById('abTestingScreen');
+        const diagnosticsScreen = document.getElementById('diagnosticsScreen');
+        const goToAbTesting = document.getElementById('goToAbTesting');
+        const goToDiagnostics = document.getElementById('goToDiagnostics');
+        const homeBtnAb = document.getElementById('homeBtnAb');
+        const homeBtnDiagnostics = document.getElementById('homeBtnDiagnostics');
+
+        const productSelector = document.getElementById('productSelector');
+        const surfaceSelector = document.getElementById('surfaceSelector');
+        const cheatsheetForm = document.getElementById('cheatsheet-form');
+        const frameworkSections = document.getElementById('framework-sections');
+        const generateDecisionBtn = document.getElementById('generateDecisionBtn');
+        const iterateBtn = document.getElementById('iterateBtn');
+        const decisionOutput = document.getElementById('decision-output');
+        const decisionCard = document.getElementById('decision-card');
+        const decisionCommentary = document.getElementById('decision-commentary');
+        const iterationOutput = document.getElementById('iteration-output');
+        const iterationList = document.getElementById('iteration-list');
+        const pdfModal = document.getElementById('pdfModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const pdfContent = document.getElementById('pdfContent');
+        const diagProductSelector = document.getElementById('diagProductSelector');
+        const diagnosticsContent = document.getElementById('diagnostics-content');
+
+        function showScreen(screen) {
+            homeScreen.classList.add('hidden');
+            abTestingScreen.classList.add('hidden');
+            diagnosticsScreen.classList.add('hidden');
+            screen.classList.remove('hidden');
+        }
+
+        goToAbTesting.addEventListener('click', () => showScreen(abTestingScreen));
+        goToDiagnostics.addEventListener('click', () => {
+            showScreen(diagnosticsScreen);
+            renderDiagnostics('normal');
+        });
+        homeBtnAb.addEventListener('click', () => showScreen(homeScreen));
+        homeBtnDiagnostics.addEventListener('click', () => showScreen(homeScreen));
+
+        diagProductSelector.addEventListener('change', (e) => renderDiagnostics(e.target.value));
+
+        function renderDiagnostics(product) {
+            const data = diagnosticsData[product];
+            let html = `<h2 class="text-3xl font-bold text-center mb-6 text-gray-800">${data.title}</h2>`;
+            html += '<div class="space-y-6">';
+            
+            for(const stepTitle in data.steps) {
+                html += '<div class="bg-white rounded-2xl shadow-lg p-6">';
+                html += `<h3 class="text-xl font-bold text-gray-900 mb-4">${stepTitle}</h3>`;
+                html += '<ul class="list-disc list-inside space-y-2 text-gray-700">';
+                data.steps[stepTitle].forEach(item => {
+                    html += `<li>${item}</li>`;
+                });
+                html += '</ul></div>';
+            }
+
+            html += '</div>';
+            diagnosticsContent.innerHTML = html;
+        }
+
+
+        function init() {
+            Object.keys(productData).filter(k => k !== 'global').forEach(key => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = productData[key].name;
+                productSelector.appendChild(option);
+            });
+            populatePdfModal();
+        }
+
+        function populatePdfModal() {
+            let html = '';
+            for (const category in pdfData) {
+                html += `<h4 class="text-md font-semibold text-gray-800 mt-4 mb-2">${category}</h4>`;
+                html += '<table class="min-w-full divide-y divide-gray-200 border">';
+                html += '<thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Surface</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Primary Metrics</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Common Guardrails</th></tr></thead>';
+                html += '<tbody class="bg-white divide-y divide-gray-200">';
+                pdfData[category].forEach(row => {
+                    html += `<tr><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${row.Surface}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row['Primary Metrics']}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${row['Common Guardrails']}</td></tr>`;
+                });
+                html += '</tbody></table>';
+            }
+            pdfContent.innerHTML = html;
+        }
+
+        function hideOutputs() {
+            decisionOutput.classList.add('hidden');
+            iterationOutput.classList.add('hidden');
+        }
+
+        productSelector.addEventListener('change', (e) => {
+            const productKey = e.target.value;
+            surfaceSelector.innerHTML = '<option value="">-- Choose a surface --</option>';
+            surfaceSelector.disabled = true;
+            cheatsheetForm.classList.add('hidden');
+            hideOutputs();
+
+            if (productKey) {
+                const product = productData[productKey];
+                Object.keys(product.surfaces).forEach(surfaceKey => {
+                    const option = document.createElement('option');
+                    option.value = surfaceKey;
+                    option.textContent = product.surfaces[surfaceKey].name;
+                    surfaceSelector.appendChild(option);
+                });
+                surfaceSelector.disabled = false;
+            }
+        });
+
+        surfaceSelector.addEventListener('change', (e) => {
+            const surfaceKey = e.target.value;
+            const productKey = productSelector.value;
+            if (surfaceKey && productKey) {
+                populateForm(productKey, surfaceKey);
+                cheatsheetForm.classList.remove('hidden');
+                hideOutputs();
+            } else {
+                cheatsheetForm.classList.add('hidden');
+            }
+        });
+
+        function addOtherOption(optionsContainer, sectionKey) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex items-center mt-3 pt-3 border-t border-gray-200';
+            const checkboxId = `${sectionKey}-other`;
+            wrapper.innerHTML = `
+                <input type="checkbox" id="${checkboxId}" name="${sectionKey}" value="other" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer other-checkbox">
+                <label for="${checkboxId}" class="ml-3 block text-sm font-medium text-gray-700 cursor-pointer">Other:</label>
+                <input type="text" placeholder="Add custom value..." class="ml-2 p-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm hidden other-textbox w-full">
+            `;
+            optionsContainer.appendChild(wrapper);
+            const otherCheckbox = wrapper.querySelector('.other-checkbox');
+            const otherTextbox = wrapper.querySelector('.other-textbox');
+            otherCheckbox.addEventListener('change', (e) => {
+                otherTextbox.classList.toggle('hidden', !e.target.checked);
+                if (e.target.checked) {
+                    otherTextbox.focus();
+                }
+            });
+        }
+
+        function createCheckboxSection(title, options, sectionKey) {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'bg-white p-5 rounded-lg shadow-sm border border-gray-200';
+            
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'text-lg font-semibold text-gray-800 mb-3';
+            titleEl.textContent = title;
+            sectionDiv.appendChild(titleEl);
+
+            const optionsContainer = document.createElement('div');
+            optionsContainer.className = 'space-y-2';
+            optionsContainer.id = `section-${sectionKey}`;
+
+            options.forEach((option, index) => {
+                const optionId = `${sectionKey}-${index}`;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex items-center';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = optionId;
+                checkbox.name = sectionKey;
+                checkbox.value = option;
+                checkbox.className = 'h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer';
+
+                const label = document.createElement('label');
+                label.htmlFor = optionId;
+                label.textContent = option;
+                label.className = 'ml-3 block text-sm text-gray-700 cursor-pointer';
+
+                wrapper.appendChild(checkbox);
+                wrapper.appendChild(label);
+                optionsContainer.appendChild(wrapper);
+            });
+            sectionDiv.appendChild(optionsContainer);
+
+            if (sectionKey === 'hypothesis') {
+                const pdfLink = document.createElement('a');
+                pdfLink.href = '#';
+                pdfLink.id = 'pdfLink';
+                pdfLink.textContent = 'More Metrics';
+                pdfLink.className = 'text-sm text-indigo-600 hover:underline mt-2 inline-block';
+                pdfLink.onclick = (e) => { 
+                    e.preventDefault(); 
+                    pdfModal.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                };
+                sectionDiv.appendChild(pdfLink);
+                pdfLink.classList.toggle('hidden', productSelector.value !== 'instagram');
+            }
+
+            if (['goal', 'hypothesis', 'primary_metric', 'pitfalls'].includes(sectionKey)) {
+                addOtherOption(optionsContainer, sectionKey);
+            }
+
+            return sectionDiv;
+        }
+        
+        function createGuardrailSection(guardrails) {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'bg-white p-5 rounded-lg shadow-sm border border-gray-200';
+            sectionDiv.id = 'section-guardrails';
+            
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'text-lg font-semibold text-gray-800 mb-3';
+            titleEl.textContent = 'Guardrails';
+            sectionDiv.appendChild(titleEl);
+
+            Object.entries(guardrails).forEach(([category, options]) => {
+                const subTitle = document.createElement('h4');
+                subTitle.className = 'text-sm font-medium text-gray-600 mt-4 mb-2 uppercase tracking-wider';
+                subTitle.textContent = category.replace(/_/g, ' ');
+                sectionDiv.appendChild(subTitle);
+                
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'space-y-2';
+                optionsContainer.id = `section-guardrails-${category}`;
+
+                options.forEach((option, index) => {
+                    const optionId = `guardrails-${category}-${index}`;
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'flex items-center';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = optionId;
+                    checkbox.name = `guardrails-${category}`;
+                    checkbox.value = option;
+                    checkbox.className = 'h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer';
+
+                    const label = document.createElement('label');
+                    label.htmlFor = optionId;
+                    label.textContent = option;
+                    label.className = 'ml-3 block text-sm text-gray-700 cursor-pointer';
+
+                    wrapper.appendChild(checkbox);
+                    wrapper.appendChild(label);
+                    optionsContainer.appendChild(wrapper);
+                });
+                sectionDiv.appendChild(optionsContainer);
+            });
+            
+            addOtherOption(sectionDiv, 'guardrails');
+            return sectionDiv;
+        }
+
+        function createDiagnosticsSection(title, diagnostics, sectionKey) {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'bg-white p-5 rounded-lg shadow-sm border border-gray-200';
+            sectionDiv.id = `section-${sectionKey}`;
+            
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'text-lg font-semibold text-gray-800 mb-3';
+            titleEl.textContent = title;
+            sectionDiv.appendChild(titleEl);
+
+            const mainContainer = document.createElement('div');
+            mainContainer.className = 'space-y-2';
+            diagnostics.main.forEach((option, index) => {
+                const optionId = `${sectionKey}-main-${index}`;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex items-center';
+                wrapper.innerHTML = `
+                    <input type="checkbox" id="${optionId}" name="${sectionKey}-main" value="${option}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
+                    <label for="${optionId}" class="ml-3 block text-sm text-gray-700 cursor-pointer">${option}</label>
+                `;
+                mainContainer.appendChild(wrapper);
+            });
+            sectionDiv.appendChild(mainContainer);
+
+            const seeMoreLink = document.createElement('a');
+            seeMoreLink.href = '#';
+            seeMoreLink.textContent = 'See More';
+            seeMoreLink.className = 'text-sm text-indigo-600 hover:underline mt-3 inline-block';
+            sectionDiv.appendChild(seeMoreLink);
+
+            const robustnessContainer = document.createElement('div');
+            robustnessContainer.className = 'hidden mt-4 pt-4 border-t border-gray-200';
+            
+            const robustnessTitle = document.createElement('h4');
+            robustnessTitle.className = 'text-sm font-medium text-gray-600 mb-2 uppercase tracking-wider';
+            robustnessTitle.textContent = 'Robustness Checks';
+            robustnessContainer.appendChild(robustnessTitle);
+
+            const robustnessOptions = document.createElement('div');
+            robustnessOptions.className = 'space-y-2';
+            diagnostics.robustness.forEach((option, index) => {
+                const optionId = `${sectionKey}-robustness-${index}`;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'flex items-center';
+                wrapper.innerHTML = `
+                    <input type="checkbox" id="${optionId}" name="${sectionKey}-robustness" value="${option}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 cursor-pointer">
+                    <label for="${optionId}" class="ml-3 block text-sm text-gray-700 cursor-pointer">${option}</label>
+                `;
+                robustnessOptions.appendChild(wrapper);
+            });
+            robustnessContainer.appendChild(robustnessOptions);
+            sectionDiv.appendChild(robustnessContainer);
+
+            seeMoreLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isHidden = robustnessContainer.classList.contains('hidden');
+                robustnessContainer.classList.toggle('hidden');
+                seeMoreLink.textContent = isHidden ? 'See Less' : 'See More';
+            });
+
+            return sectionDiv;
+        }
+
+        function checkDefaults() {
+            // Guardrails
+            const guardrailCheckboxes = document.querySelectorAll('[id^="section-guardrails-core_engagement"] input[type="checkbox"]');
+            guardrailCheckboxes.forEach(cb => {
+                 cb.checked = true;
+            });
+
+            // Design
+            const designCheckboxes = document.querySelectorAll('#section-design input[type="checkbox"]');
+            designCheckboxes.forEach(cb => {
+                cb.checked = true;
+            });
+            
+            // Power Analysis
+            const powerCheckboxes = document.querySelectorAll('#section-power_analysis input[type="checkbox"]');
+            powerCheckboxes.forEach(cb => {
+                cb.checked = true;
+            });
+
+            // Diagnostics
+            const diagnosticCheckboxes = document.querySelectorAll('#section-diagnostics input[type="checkbox"][name="diagnostics-main"]');
+            diagnosticCheckboxes.forEach(cb => {
+                cb.checked = true;
+            });
+
+            // HTE
+            const hteCheckboxes = document.querySelectorAll('#section-hte input[type="checkbox"]');
+            hteCheckboxes.forEach(cb => {
+                const value = cb.value.toLowerCase();
+                if (value.includes('new vs existing') || value.includes('high vs. low activity') || value.includes('geo/device')) {
+                    cb.checked = true;
+                }
+            });
+
+            // Eligibility
+             const eligibilityCheckboxes = document.querySelectorAll('#section-unit_eligibility input[type="checkbox"]');
+            eligibilityCheckboxes.forEach(cb => {
+                const value = cb.value.toLowerCase();
+                if (value.includes('filter out trims') || value.includes('eligible users')) {
+                    cb.checked = true;
+                }
+            });
+        }
+
+        function populateForm(productKey, surfaceKey) {
+            const surfaceData = productData[productKey].surfaces[surfaceKey];
+            const globalData = productData.global;
+            frameworkSections.innerHTML = '';
+
+            // Order of sections
+            frameworkSections.appendChild(createCheckboxSection('Goal', surfaceData.goal, 'goal'));
+            frameworkSections.appendChild(createCheckboxSection('Hypothesis', surfaceData.hypothesis, 'hypothesis'));
+            frameworkSections.appendChild(createCheckboxSection('Unit & Eligibility', surfaceData.unit_eligibility, 'unit_eligibility'));
+            frameworkSections.appendChild(createCheckboxSection('Primary Metric', surfaceData.primary_metric, 'primary_metric'));
+            frameworkSections.appendChild(createGuardrailSection(surfaceData.guardrails));
+            frameworkSections.appendChild(createCheckboxSection('Design', surfaceData.design, 'design'));
+            frameworkSections.appendChild(createCheckboxSection('Power Analysis', globalData.power_analysis, 'power_analysis'));
+            frameworkSections.appendChild(createCheckboxSection('Metric Analysis', globalData.metric_analysis, 'metric_analysis'));
+            frameworkSections.appendChild(createDiagnosticsSection('Diagnostics', globalData.diagnostics, 'diagnostics'));
+            frameworkSections.appendChild(createCheckboxSection('Potential Pitfalls', surfaceData.pitfalls, 'pitfalls'));
+            frameworkSections.appendChild(createCheckboxSection('HTE (Heterogeneous Treatment Effects)', surfaceData.hte, 'hte'));
+            
+            checkDefaults();
+        }
+        
+        function getSelectedValues(sectionId, sectionName) {
+            const values = [];
+            document.querySelectorAll(`#${sectionId} input[type="checkbox"]:checked`).forEach(cb => {
+                if (cb.value !== 'other') {
+                    values.push(`<strong>${cb.value}</strong>`);
+                } else {
+                    const otherTextbox = cb.parentElement.querySelector('.other-textbox');
+                    if (otherTextbox && otherTextbox.value.trim()) {
+                        values.push(`<strong>other - ${sectionName}</strong>`);
+                    }
+                }
+            });
+            return values;
+        }
+
+        generateDecisionBtn.addEventListener('click', () => {
+            hideOutputs();
+            if (surfaceSelector.selectedIndex <= 0) {
+                alert("Please select a product and surface first.");
+                return;
+            }
+
+            const selectedDesign = getSelectedValues('section-design', 'design').join(', ') || "<strong>an experiment</strong>";
+            const surfaceName = `<strong>${surfaceSelector.options[surfaceSelector.selectedIndex].text}</strong>`;
+            const primaryMetric = getSelectedValues('section-primary_metric', 'primary metric').join(' and ') || "<strong>the primary metric</strong>";
+            const allGuardrails = getSelectedValues('section-guardrails', 'guardrail');
+            const diagnostics = getSelectedValues('section-diagnostics', 'diagnostic').join(', ') || "<strong>standard checks</strong>";
+
+            let commentary = `We ran a ${selectedDesign}. On ${surfaceName}, the experiment showed a positive impact on the primary metric: ${primaryMetric}, with confidence intervals excluding zero. `;
+            
+            if (allGuardrails.length > 0) {
+                 commentary += `Key guardrail metrics, including ${allGuardrails.join(', ')}, remained neutral or within non-inferiority bounds. `;
+            } else {
+                 commentary += `No negative movements were observed in key guardrail metrics. `;
+            }
+            
+            commentary += `${diagnostics} and invariants pass. I recommend a staged ramp to 100% with cross-surface monitoring.`;
+            
+            decisionCommentary.innerHTML = commentary;
+            decisionCard.className = `decision-card bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500`;
+            
+            decisionOutput.classList.remove('hidden');
+            decisionOutput.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        iterateBtn.addEventListener('click', () => {
+            hideOutputs();
+            iterationList.innerHTML = ''; // Clear previous list
+            iterationSteps.forEach(step => {
+                const li = document.createElement('li');
+                li.textContent = step;
+                iterationList.appendChild(li);
+            });
+            iterationOutput.classList.remove('hidden');
+            iterationOutput.scrollIntoView({ behavior: 'smooth' });
+        });
+        
+        closeModalBtn.addEventListener('click', () => {
+            pdfModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        });
+
+        init();
+    </script>
+</body>
+</html>
